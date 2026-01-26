@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from 'sonner'
+import Chatbot from '@/components/Chatbot'
 import { 
   Printer, 
   Box, 
@@ -32,7 +33,8 @@ import {
   Zap,
   Check,
   ArrowRight,
-  MessageCircle
+  MessageCircle,
+  Bot
 } from 'lucide-react'
 
 // Constants
