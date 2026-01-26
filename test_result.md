@@ -152,15 +152,18 @@ backend:
 
   - task: "POST /api/auth/login - Login administrador"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/app/api/[[...path]]/route.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "JWT auth con bcrypt, crea admin por defecto"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Admin login successful with credentials admin@printstudios.cl/admin123. Returns JWT token and user data. Creates default admin if none exists. Protected routes correctly return 401 without token."
 
   - task: "GET /api/admin/dashboard - Dashboard stats (auth)"
     implemented: true
