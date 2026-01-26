@@ -122,15 +122,18 @@ backend:
 
   - task: "GET /api/portfolio - Obtener portfolio público"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/app/api/[[...path]]/route.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "API implementada con datos por defecto"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: API returns 6 portfolio items with correct structure (id, title, category, image, description). Seeds default data when DB empty."
 
   - task: "POST /api/quotes - Crear cotización (público)"
     implemented: true
