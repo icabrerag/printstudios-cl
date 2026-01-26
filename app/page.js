@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from 'sonner'
 import { 
   Printer, 
-  Cube, 
+  Box, 
   Image as ImageIcon, 
   FileText, 
   Upload, 
