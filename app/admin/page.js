@@ -122,9 +122,10 @@ const LoginForm = ({ onLogin }) => {
 }
 
 // Sidebar Component
-const Sidebar = ({ activeTab, setActiveTab, onLogout }) => {
+const Sidebar = ({ activeTab, setActiveTab, onLogout, botRequestCount }) => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'bot-requests', label: 'Solicitudes Bot', icon: Bot, badge: botRequestCount },
     { id: 'quotes', label: 'Cotizaciones', icon: FileText },
     { id: 'services', label: 'Servicios', icon: Package },
     { id: 'portfolio', label: 'Portfolio', icon: ImageIcon },
@@ -150,7 +151,10 @@ const Sidebar = ({ activeTab, setActiveTab, onLogout }) => {
             }`}
           >
             <item.icon className="h-5 w-5" />
-            {item.label}
+            <span className="flex-1 text-left">{item.label}</span>
+            {item.badge > 0 && (
+              <Badge className="bg-red-500 text-white text-xs">{item.badge}</Badge>
+            )}
           </button>
         ))}
       </nav>
