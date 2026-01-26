@@ -212,15 +212,18 @@ backend:
 
   - task: "CRUD /api/admin/portfolio - Gestión portfolio (auth)"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/app/api/[[...path]]/route.js"
     stuck_count: 0
     priority: "low"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "GET/POST/DELETE para portfolio"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Portfolio CRUD operations successful - GET returns portfolio items, POST creates new item, DELETE removes item. All require JWT auth and work correctly."
 
 metadata:
   created_by: "main_agent"
