@@ -248,12 +248,506 @@ const StatusBadge = ({ status }) => {
     approved: { label: 'Aprobada', variant: 'default' },
     rejected: { label: 'Rechazada', variant: 'destructive' },
     in_progress: { label: 'En Proceso', variant: 'outline' },
-    completed: { label: 'Completada', variant: 'default' }
+    completed: { label: 'Completada', variant: 'default' },
+    NEW: { label: 'Nueva', variant: 'default' },
+    WAITING_INFO: { label: 'Esperando Info', variant: 'secondary' },
+    QUOTED: { label: 'Cotizada', variant: 'default' },
+    IN_PRODUCTION: { label: 'En Producción', variant: 'outline' },
+    READY: { label: 'Lista', variant: 'default' },
+    DELIVERED: { label: 'Entregada', variant: 'default' }
   }
 
   const config = statusMap[status] || { label: status, variant: 'secondary' }
 
   return <Badge variant={config.variant}>{config.label}</Badge>
+}
+
+// Bot Request Status Badge
+const BotStatusBadge = ({ status }) => {
+  const statusColors = {
+    NEW: 'bg-blue-100 text-blue-800',
+    WAITING_INFO: 'bg-yellow-100 text-yellow-800',
+    QUOTED: 'bg-green-100 text-green-800',
+    IN_PRODUCTION: 'bg-purple-100 text-purple-800',
+    READY: 'bg-teal-100 text-teal-800',
+    DELIVERED: 'bg-gray-100 text-gray-800'
+  }
+
+  return (
+    <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[status] || 'bg-gray-100 text-gray-800'}`}>
+      {status}
+    </span>
+  )
+}
+
+// Bot Requests Management Component
+const BotRequestsManagement = ({ requests, onRefresh, token }) => {
+  const [selectedRequest, setSelectedRequest] = useState(null)
+  const [conversation, setConversation] = useState([])
+  const [isDetailOpen, setIsDetailOpen] = useState(false)
+  const [isConvertOpen, setIsConvertOpen] = useState(false)
+  const [isRequestInfoOpen, setIsRequestInfoOpen] = useState(false)
+  const [convertData, setConvertData] = useState({ estimatedPrice: '', estimatedDays: '', notes: '' })
+  const [requestInfoMessage, setRequestInfoMessage] = useState('')
+
+  const viewDetail = async (request) => {
+    setSelectedRequest(request)
+    try {
+      const response = await fetch(`/api/admin/bot-requests/${request.id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setConversation(data.conversation || [])
+      }
+    } catch (error) {
+      console.error('Error loading conversation:', error)
+    }
+    setIsDetailOpen(true)
+  }
+
+  const handleConvert = async () => {
+    try {
+      const response = await fetch(`/api/admin/bot-requests/${selectedRequest.id}/convert`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(convertData)
+      })
+
+      if (response.ok) {
+        toast.success('Solicitud convertida a cotización')
+        setIsConvertOpen(false)
+        setConvertData({ estimatedPrice: '', estimatedDays: '', notes: '' })
+        onRefresh()
+      }
+    } catch (error) {
+      toast.error('Error al convertir')
+    }
+  }
+
+  const handleRequestInfo = async () => {
+    try {
+      const response = await fetch(`/api/admin/bot-requests/${selectedRequest.id}/request-info`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ message: requestInfoMessage })
+      })
+
+      if (response.ok) {
+        toast.success('Solicitud de información enviada')
+        setIsRequestInfoOpen(false)
+        setRequestInfoMessage('')
+        onRefresh()
+      }
+    } catch (error) {
+      toast.error('Error al enviar solicitud')
+    }
+  }
+
+  const updateStatus = async (requestId, status) => {
+    try {
+      const response = await fetch(`/api/admin/bot-requests/${requestId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status })
+      })
+
+      if (response.ok) {
+        toast.success('Estado actualizado')
+        onRefresh()
+      }
+    } catch (error) {
+      toast.error('Error al actualizar')
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold">Solicitudes del Chatbot</h1>
+          <p className="text-gray-500 text-sm">Solicitudes de cotización generadas por el asistente de IA</p>
+        </div>
+        <Button onClick={onRefresh} variant="outline">Actualizar</Button>
+      </div>
+
+      <Card>
+        <CardContent className="pt-6">
+          {requests?.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <Bot className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No hay solicitudes del chatbot aún</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Descripción</TableHead>
+                  <TableHead>Archivos</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead>Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {requests?.map((req) => (
+                  <TableRow key={req.id}>
+                    <TableCell className="whitespace-nowrap">
+                      {new Date(req.createdAt).toLocaleDateString('es-CL')}
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium">{req.contact?.name || 'Sin nombre'}</p>
+                        <p className="text-xs text-gray-500">{req.contact?.email}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{req.intentType || 'General'}</Badge>
+                    </TableCell>
+                    <TableCell className="max-w-xs truncate">
+                      {req.requirements?.description || 'Sin descripción'}
+                    </TableCell>
+                    <TableCell>
+                      {(req.attachments?.length || 0) > 0 ? (
+                        <Badge className="bg-blue-100 text-blue-800">
+                          <Paperclip className="w-3 h-3 mr-1" />
+                          {req.attachments.length}
+                        </Badge>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <BotStatusBadge status={req.status} />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button size="sm" variant="ghost" onClick={() => viewDetail(req)}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Detail Dialog */}
+      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Detalle de Solicitud</DialogTitle>
+            <DialogDescription>
+              Solicitud #{selectedRequest?.id?.slice(0, 8)}... - {selectedRequest?.contact?.name}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-auto">
+            <Tabs defaultValue="info" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="info">Información</TabsTrigger>
+                <TabsTrigger value="conversation">Conversación</TabsTrigger>
+                <TabsTrigger value="summary">Resumen</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="info" className="space-y-4 mt-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm">Contacto</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-1 text-sm">
+                      <p><strong>Nombre:</strong> {selectedRequest?.contact?.name}</p>
+                      <p><strong>Email:</strong> {selectedRequest?.contact?.email}</p>
+                      <p><strong>WhatsApp:</strong> {selectedRequest?.contact?.whatsapp || '-'}</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm">Proyecto</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-1 text-sm">
+                      <p><strong>Tipo:</strong> {selectedRequest?.intentType}</p>
+                      <p><strong>Descripción:</strong> {selectedRequest?.requirements?.description}</p>
+                      <p><strong>Uso:</strong> {selectedRequest?.requirements?.usage}</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm">Especificaciones</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-1 text-sm">
+                      <p><strong>Material:</strong> {selectedRequest?.requirements?.material || '-'}</p>
+                      <p><strong>Color:</strong> {selectedRequest?.requirements?.color || '-'}</p>
+                      <p><strong>Cantidad:</strong> {selectedRequest?.requirements?.quantity || 1}</p>
+                      <p><strong>Dimensiones:</strong> {selectedRequest?.requirements?.dimensions || '-'}</p>
+                      <p><strong>Acabado:</strong> {selectedRequest?.requirements?.finish || '-'}</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm">Entrega</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-1 text-sm">
+                      <p><strong>Urgencia:</strong> {selectedRequest?.requirements?.deadline || '-'}</p>
+                      <p><strong>Entrega:</strong> {selectedRequest?.requirements?.delivery || '-'}</p>
+                      <p><strong>Presupuesto:</strong> {selectedRequest?.requirements?.budget || 'Abierto'}</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {selectedRequest?.attachments?.length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm">Archivos Adjuntos</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedRequest.attachments.map((file, i) => (
+                          <Badge key={i} variant="outline" className="py-1">
+                            <Paperclip className="w-3 h-3 mr-1" />
+                            {file.type} #{i + 1}
+                          </Badge>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+
+              <TabsContent value="conversation" className="mt-4">
+                <Card>
+                  <CardContent className="pt-4">
+                    <ScrollArea className="h-[400px] pr-4">
+                      {conversation.map((msg, i) => (
+                        <div
+                          key={i}
+                          className={`mb-3 flex ${msg.role === 'bot' ? 'justify-start' : 'justify-end'}`}
+                        >
+                          <div
+                            className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+                              msg.role === 'bot'
+                                ? 'bg-gray-100 text-gray-800'
+                                : 'bg-primary text-white'
+                            }`}
+                          >
+                            <p className="whitespace-pre-wrap">{msg.content}</p>
+                            <span className="text-xs opacity-60 mt-1 block">
+                              {new Date(msg.timestamp).toLocaleTimeString('es-CL')}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="summary" className="mt-4">
+                <Card>
+                  <CardContent className="pt-4 space-y-4">
+                    {selectedRequest?.summary?.bullets?.length > 0 && (
+                      <div>
+                        <h4 className="font-semibold mb-2">Puntos Clave</h4>
+                        <ul className="list-disc list-inside space-y-1 text-sm">
+                          {selectedRequest.summary.bullets.map((b, i) => (
+                            <li key={i}>{b}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {selectedRequest?.summary?.risks?.length > 0 && (
+                      <div>
+                        <h4 className="font-semibold mb-2 text-orange-600 flex items-center gap-1">
+                          <AlertTriangle className="w-4 h-4" />
+                          Riesgos / Alertas
+                        </h4>
+                        <ul className="list-disc list-inside space-y-1 text-sm text-orange-700">
+                          {selectedRequest.summary.risks.map((r, i) => (
+                            <li key={i}>{r}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {selectedRequest?.summary?.questions?.length > 0 && (
+                      <div>
+                        <h4 className="font-semibold mb-2 text-blue-600">Preguntas Pendientes</h4>
+                        <ul className="list-disc list-inside space-y-1 text-sm text-blue-700">
+                          {selectedRequest.summary.questions.map((q, i) => (
+                            <li key={i}>{q}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {selectedRequest?.missingInfo?.length > 0 && (
+                      <div>
+                        <h4 className="font-semibold mb-2 text-red-600">Información Faltante</h4>
+                        <ul className="list-disc list-inside space-y-1 text-sm text-red-700">
+                          {selectedRequest.missingInfo.map((m, i) => (
+                            <li key={i}>{m}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          <DialogFooter className="gap-2 mt-4">
+            <Select
+              value={selectedRequest?.status}
+              onValueChange={(value) => {
+                updateStatus(selectedRequest?.id, value)
+                setSelectedRequest(prev => ({ ...prev, status: value }))
+              }}
+            >
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="NEW">Nueva</SelectItem>
+                <SelectItem value="WAITING_INFO">Esperando Info</SelectItem>
+                <SelectItem value="QUOTED">Cotizada</SelectItem>
+                <SelectItem value="IN_PRODUCTION">En Producción</SelectItem>
+                <SelectItem value="READY">Lista</SelectItem>
+                <SelectItem value="DELIVERED">Entregada</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsDetailOpen(false)
+                setIsRequestInfoOpen(true)
+              }}
+            >
+              <MessageCircle className="w-4 h-4 mr-2" />
+              Solicitar Info
+            </Button>
+
+            <Button
+              onClick={() => {
+                setIsDetailOpen(false)
+                setIsConvertOpen(true)
+              }}
+            >
+              <ArrowRight className="w-4 h-4 mr-2" />
+              Convertir a Cotización
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Convert to Quote Dialog */}
+      <Dialog open={isConvertOpen} onOpenChange={setIsConvertOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Convertir a Cotización</DialogTitle>
+            <DialogDescription>
+              Genera una cotización formal para {selectedRequest?.contact?.name}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Precio Estimado (CLP)</Label>
+              <Input
+                type="number"
+                placeholder="25000"
+                value={convertData.estimatedPrice}
+                onChange={(e) => setConvertData({ ...convertData, estimatedPrice: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Días de Entrega Estimados</Label>
+              <Input
+                type="number"
+                placeholder="7"
+                value={convertData.estimatedDays}
+                onChange={(e) => setConvertData({ ...convertData, estimatedDays: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Notas para el Cliente</Label>
+              <Textarea
+                placeholder="Detalles adicionales de la cotización..."
+                value={convertData.notes}
+                onChange={(e) => setConvertData({ ...convertData, notes: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsConvertOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleConvert}>
+              <Send className="w-4 h-4 mr-2" />
+              Enviar Cotización
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Request More Info Dialog */}
+      <Dialog open={isRequestInfoOpen} onOpenChange={setIsRequestInfoOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Solicitar Más Información</DialogTitle>
+            <DialogDescription>
+              Envía un mensaje a {selectedRequest?.contact?.name} pidiendo más detalles
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Mensaje</Label>
+              <Textarea
+                placeholder="¿Podrías enviarnos más detalles sobre...?"
+                value={requestInfoMessage}
+                onChange={(e) => setRequestInfoMessage(e.target.value)}
+                rows={4}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsRequestInfoOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleRequestInfo}>
+              <Send className="w-4 h-4 mr-2" />
+              Enviar Solicitud
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
 }
 
 // Quotes Management Component
