@@ -512,6 +512,8 @@ class PrintStudiosAPITester:
                             f"Step 1 failed: {response.status_code}")
                 return False
             
+            print(f"Step 1 response: {response.json()}")
+            
             # Step 2: Send description
             response = requests.post(f"{self.base_url}/chat/message", 
                                    json={
@@ -525,6 +527,8 @@ class PrintStudiosAPITester:
                             f"Step 2 failed: {response.status_code}")
                 return False
             
+            print(f"Step 2 response: {response.json()}")
+            
             # Step 3: Send "Sí" when asked about having file
             response = requests.post(f"{self.base_url}/chat/message", 
                                    json={
@@ -537,6 +541,8 @@ class PrintStudiosAPITester:
                 self.log_test("Chatbot Complete Flow", False, 
                             f"Step 3 failed: {response.status_code}")
                 return False
+            
+            print(f"Step 3 response: {response.json()}")
             
             # Continue with flow steps
             flow_steps = [
@@ -567,8 +573,11 @@ class PrintStudiosAPITester:
                     return False
                     
                 data = response.json()
+                print(f"Step {step_name} response: {data}")
+                
                 if data.get('isComplete'):
                     self.quote_request_id = data.get('quoteRequestId')
+                    print(f"Flow completed! Quote request ID: {self.quote_request_id}")
                     break
             
             self.log_test("Chatbot Complete Flow", True, 
