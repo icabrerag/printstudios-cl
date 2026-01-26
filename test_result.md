@@ -167,15 +167,18 @@ backend:
 
   - task: "GET /api/admin/dashboard - Dashboard stats (auth)"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/app/api/[[...path]]/route.js"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Requiere token JWT en header Authorization"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Dashboard returns complete stats (totalQuotes, pendingQuotes, approvedQuotes, completedOrders, totalRevenue) and recentQuotes array. JWT auth working correctly."
 
   - task: "GET/PUT /api/admin/quotes - Gestión cotizaciones (auth)"
     implemented: true
