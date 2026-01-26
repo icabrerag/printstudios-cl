@@ -73,7 +73,7 @@ const LoginForm = ({ onLogin }) => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <Cube className="h-12 w-12 text-primary" />
+            <Box className="h-12 w-12 text-primary" />
           </div>
           <CardTitle>PrintStudios Admin</CardTitle>
           <CardDescription>Ingresa tus credenciales para continuar</CardDescription>
