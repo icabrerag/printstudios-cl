@@ -1452,11 +1452,23 @@ export default function AdminPage() {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={handleLogout} />
+      <Sidebar 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        onLogout={handleLogout}
+        botRequestCount={data.newBotRequestCount || 0}
+      />
       
       <main className="flex-1 p-8 overflow-auto">
         {activeTab === 'dashboard' && (
           <Dashboard stats={data.stats} recentQuotes={data.recentQuotes} />
+        )}
+        {activeTab === 'bot-requests' && (
+          <BotRequestsManagement
+            requests={data.botRequests}
+            onRefresh={fetchData}
+            token={localStorage.getItem('token')}
+          />
         )}
         {activeTab === 'quotes' && (
           <QuotesManagement
