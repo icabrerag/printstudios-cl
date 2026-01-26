@@ -182,15 +182,18 @@ backend:
 
   - task: "GET/PUT /api/admin/quotes - Gestión cotizaciones (auth)"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/app/api/[[...path]]/route.js"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "CRUD completo para cotizaciones admin"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: GET /api/admin/quotes returns quotes array. PUT /api/admin/quotes/:id successfully updates quote status and sends MOCKED email notification. Both require valid JWT token."
 
   - task: "CRUD /api/admin/services - Gestión servicios (auth)"
     implemented: true
