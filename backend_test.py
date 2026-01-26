@@ -454,6 +454,276 @@ class PrintStudiosAPITester:
         except Exception as e:
             self.log_test("Admin Portfolio CRUD", False, f"Request failed: {str(e)}")
             return False
+
+    def test_chatbot_start_session(self):
+        """Test POST /api/chat/start - Start new chat session"""
+        try:
+            start_data = {
+                "guestId": "test-guest-123"
+            }
+            
+            response = requests.post(f"{self.base_url}/chat/start", 
+                                   json=start_data, 
+                                   timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ['sessionId', 'guestId', 'message', 'state', 'nextState']
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    self.chat_session_id = data['sessionId']
+                    self.log_test("POST /api/chat/start", True, 
+                                f"Chat session started successfully. SessionId: {self.chat_session_id}")
+                    return True
+                else:
+                    self.log_test("POST /api/chat/start", False, 
+                                f"Missing required fields: {missing_fields}")
+                    return False
+            else:
+                self.log_test("POST /api/chat/start", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("POST /api/chat/start", False, f"Request failed: {str(e)}")
+            return False
+
+    def test_chatbot_complete_flow(self):
+        """Test complete chatbot flow as specified in requirements"""
+        if not hasattr(self, 'chat_session_id') or not self.chat_session_id:
+            self.log_test("Chatbot Complete Flow", False, "No chat session available")
+            return False
+            
+        try:
+            # Step 1: Send message "A" (select intent: print from 3D file)
+            response = requests.post(f"{self.base_url}/chat/message", 
+                                   json={
+                                       "sessionId": self.chat_session_id,
+                                       "message": "A"
+                                   }, 
+                                   timeout=10)
+            
+            if response.status_code != 200:
+                self.log_test("Chatbot Complete Flow", False, 
+                            f"Step 1 failed: {response.status_code}")
+                return False
+            
+            # Step 2: Send description
+            response = requests.post(f"{self.base_url}/chat/message", 
+                                   json={
+                                       "sessionId": self.chat_session_id,
+                                       "message": "Necesito imprimir una carcasa para Arduino"
+                                   }, 
+                                   timeout=10)
+            
+            if response.status_code != 200:
+                self.log_test("Chatbot Complete Flow", False, 
+                            f"Step 2 failed: {response.status_code}")
+                return False
+            
+            # Step 3: Send "Sí" when asked about having file
+            response = requests.post(f"{self.base_url}/chat/message", 
+                                   json={
+                                       "sessionId": self.chat_session_id,
+                                       "message": "Sí"
+                                   }, 
+                                   timeout=10)
+            
+            if response.status_code != 200:
+                self.log_test("Chatbot Complete Flow", False, 
+                            f"Step 3 failed: {response.status_code}")
+                return False
+            
+            # Continue with flow steps
+            flow_steps = [
+                ("10x8x3 cm", "dimensions"),
+                ("funcional interior", "usage"),
+                ("2", "quantity"),
+                ("PETG", "material"),
+                ("Negro", "color"),
+                ("Estándar", "finish"),
+                ("Normal", "deadline"),
+                ("Retiro en taller", "delivery"),
+                ("abierto", "budget"),
+                ("Juan Pérez\njuan@email.com\n+56912345678", "contact"),
+                ("confirmar", "confirmation")
+            ]
+            
+            for step_message, step_name in flow_steps:
+                response = requests.post(f"{self.base_url}/chat/message", 
+                                       json={
+                                           "sessionId": self.chat_session_id,
+                                           "message": step_message
+                                       }, 
+                                       timeout=10)
+                
+                if response.status_code != 200:
+                    self.log_test("Chatbot Complete Flow", False, 
+                                f"Step {step_name} failed: {response.status_code}")
+                    return False
+                    
+                data = response.json()
+                if data.get('isComplete'):
+                    self.quote_request_id = data.get('quoteRequestId')
+                    break
+            
+            self.log_test("Chatbot Complete Flow", True, 
+                        f"Complete chatbot flow successful. Quote request created: {self.quote_request_id}")
+            return True
+            
+        except Exception as e:
+            self.log_test("Chatbot Complete Flow", False, f"Request failed: {str(e)}")
+            return False
+
+    def test_get_chat_session(self):
+        """Test GET /api/chat/session/:id - Get session to resume"""
+        if not hasattr(self, 'chat_session_id') or not self.chat_session_id:
+            self.log_test("GET /api/chat/session/:id", False, "No chat session available")
+            return False
+            
+        try:
+            response = requests.get(f"{self.base_url}/chat/session/{self.chat_session_id}", 
+                                  timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ['id', 'guestId', 'state', 'data', 'messages']
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    self.log_test("GET /api/chat/session/:id", True, 
+                                f"Session retrieved successfully with {len(data.get('messages', []))} messages")
+                    return True
+                else:
+                    self.log_test("GET /api/chat/session/:id", False, 
+                                f"Missing required fields: {missing_fields}")
+                    return False
+            else:
+                self.log_test("GET /api/chat/session/:id", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("GET /api/chat/session/:id", False, f"Request failed: {str(e)}")
+            return False
+
+    def test_admin_bot_requests_list(self):
+        """Test GET /api/admin/bot-requests - List all bot requests"""
+        if not self.auth_token:
+            self.log_test("GET /api/admin/bot-requests", False, "No auth token available")
+            return False
+            
+        try:
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
+            response = requests.get(f"{self.base_url}/admin/bot-requests", 
+                                  headers=headers, 
+                                  timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list):
+                    self.log_test("GET /api/admin/bot-requests", True, 
+                                f"Retrieved {len(data)} bot requests")
+                    return True
+                else:
+                    self.log_test("GET /api/admin/bot-requests", False, 
+                                f"Expected array, got: {type(data)}")
+                    return False
+            else:
+                self.log_test("GET /api/admin/bot-requests", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("GET /api/admin/bot-requests", False, f"Request failed: {str(e)}")
+            return False
+
+    def test_admin_bot_request_details(self):
+        """Test GET /api/admin/bot-requests/:id - Get single request with conversation"""
+        if not self.auth_token:
+            self.log_test("GET /api/admin/bot-requests/:id", False, "No auth token available")
+            return False
+            
+        if not hasattr(self, 'quote_request_id') or not self.quote_request_id:
+            self.log_test("GET /api/admin/bot-requests/:id", False, "No quote request ID available")
+            return False
+            
+        try:
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
+            response = requests.get(f"{self.base_url}/admin/bot-requests/{self.quote_request_id}", 
+                                  headers=headers, 
+                                  timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if 'request' in data and 'conversation' in data:
+                    request_data = data['request']
+                    conversation = data['conversation']
+                    
+                    if isinstance(conversation, list) and len(conversation) > 0:
+                        self.log_test("GET /api/admin/bot-requests/:id", True, 
+                                    f"Bot request details retrieved with {len(conversation)} conversation messages")
+                        return True
+                    else:
+                        self.log_test("GET /api/admin/bot-requests/:id", False, 
+                                    "No conversation messages found")
+                        return False
+                else:
+                    self.log_test("GET /api/admin/bot-requests/:id", False, 
+                                f"Missing request or conversation data: {data}")
+                    return False
+            else:
+                self.log_test("GET /api/admin/bot-requests/:id", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("GET /api/admin/bot-requests/:id", False, f"Request failed: {str(e)}")
+            return False
+
+    def test_admin_convert_bot_request(self):
+        """Test POST /api/admin/bot-requests/:id/convert - Convert to quote"""
+        if not self.auth_token:
+            self.log_test("POST /api/admin/bot-requests/:id/convert", False, "No auth token available")
+            return False
+            
+        if not hasattr(self, 'quote_request_id') or not self.quote_request_id:
+            self.log_test("POST /api/admin/bot-requests/:id/convert", False, "No quote request ID available")
+            return False
+            
+        try:
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
+            convert_data = {
+                "estimatedPrice": 25000,
+                "estimatedDays": 5,
+                "notes": "Carcasa Arduino en PETG negro, acabado estándar"
+            }
+            
+            response = requests.post(f"{self.base_url}/admin/bot-requests/{self.quote_request_id}/convert", 
+                                   json=convert_data,
+                                   headers=headers, 
+                                   timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success') and data.get('quoteId'):
+                    self.converted_quote_id = data['quoteId']
+                    self.log_test("POST /api/admin/bot-requests/:id/convert", True, 
+                                f"Bot request converted to quote successfully. QuoteId: {self.converted_quote_id}")
+                    return True
+                else:
+                    self.log_test("POST /api/admin/bot-requests/:id/convert", False, 
+                                f"Conversion failed: {data}")
+                    return False
+            else:
+                self.log_test("POST /api/admin/bot-requests/:id/convert", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("POST /api/admin/bot-requests/:id/convert", False, f"Request failed: {str(e)}")
+            return False
     
     def run_all_tests(self):
         """Run all backend API tests"""
