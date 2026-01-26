@@ -737,6 +737,12 @@ class PrintStudiosAPITester:
         self.test_public_portfolio_api()
         self.test_create_quote_api()
         
+        # Chatbot API Tests
+        print("\n🤖 Testing Chatbot APIs...")
+        self.test_chatbot_start_session()
+        self.test_chatbot_complete_flow()
+        self.test_get_chat_session()
+        
         # Auth Tests
         print("\n🔐 Testing Authentication...")
         self.test_protected_route_without_token()
@@ -749,6 +755,12 @@ class PrintStudiosAPITester:
         self.test_update_quote_status()
         self.test_admin_services_crud()
         self.test_admin_portfolio_crud()
+        
+        # Admin Bot Request APIs
+        print("\n🤖👨‍💼 Testing Admin Bot Request APIs...")
+        self.test_admin_bot_requests_list()
+        self.test_admin_bot_request_details()
+        self.test_admin_convert_bot_request()
         
         # Summary
         print("\n" + "=" * 60)
