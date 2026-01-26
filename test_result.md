@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Crear aplicación web para PrintStudios.cl - servicio de impresión 3D y gráfica publicitaria en Chile. Tienda pública con catálogo, cotizaciones sin registro, panel admin con login."
+user_problem_statement: "Crear aplicación web para PrintStudios.cl - servicio de impresión 3D y gráfica publicitaria en Chile. Tienda pública con catálogo, cotizaciones sin registro, panel admin con login. MEJORA: Chatbot asistente de cotización 3D con flujo conversacional inteligente."
 
 backend:
   - task: "GET /api/services - Obtener servicios públicos"
@@ -164,6 +164,66 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ TESTED: Admin login successful with credentials admin@printstudios.cl/admin123. Returns JWT token and user data. Creates default admin if none exists. Protected routes correctly return 401 without token."
+
+  - task: "POST /api/chat/start - Iniciar sesión de chatbot"
+    implemented: true
+    working: "NA"
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Crea nueva sesión de chat con greeting message"
+
+  - task: "POST /api/chat/message - Enviar mensaje al chatbot"
+    implemented: true
+    working: "NA"
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Procesa mensaje del usuario, actualiza estado, retorna respuesta del bot"
+
+  - task: "GET /api/chat/session/:id - Obtener sesión de chat"
+    implemented: true
+    working: "NA"
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Permite recuperar sesión para continuar conversación"
+
+  - task: "GET /api/admin/bot-requests - Listar solicitudes del chatbot (admin)"
+    implemented: true
+    working: "NA"
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Retorna todas las solicitudes generadas por el chatbot"
+
+  - task: "POST /api/admin/bot-requests/:id/convert - Convertir solicitud a cotización"
+    implemented: true
+    working: "NA"
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Convierte solicitud del bot en cotización formal con precio"
 
   - task: "GET /api/admin/dashboard - Dashboard stats (auth)"
     implemented: true
