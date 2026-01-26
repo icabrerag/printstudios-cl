@@ -735,15 +735,8 @@ export default function App() {
         services={displayServices}
       />
 
-      {/* WhatsApp Float Button */}
-      <a
-        href="https://wa.me/56912345678"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 transition z-50"
-      >
-        <MessageCircle className="h-6 w-6" />
-      </a>
+      {/* AI Chatbot for 3D Quote Requests */}
+      <Chatbot />
     </div>
   )
 }
