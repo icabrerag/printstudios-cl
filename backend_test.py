@@ -20,6 +20,9 @@ class PrintStudiosAPITester:
         self.created_quote_id = None
         self.created_service_id = None
         self.created_portfolio_id = None
+        self.chat_session_id = None
+        self.quote_request_id = None
+        self.converted_quote_id = None
         
     def log_test(self, test_name, success, message, response_data=None):
         """Log test results"""
