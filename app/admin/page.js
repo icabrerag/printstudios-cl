@@ -128,7 +128,7 @@ const Sidebar = ({ activeTab, setActiveTab, onLogout }) => {
   return (
     <div className="w-64 bg-gray-900 text-white min-h-screen p-4 flex flex-col">
       <div className="flex items-center gap-2 mb-8">
-        <Cube className="h-8 w-8 text-primary" />
+        <Box className="h-8 w-8 text-primary" />
         <span className="font-bold text-lg">PrintStudios</span>
       </div>
 
