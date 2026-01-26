@@ -101,3 +101,121 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Crear aplicación web para PrintStudios.cl - servicio de impresión 3D y gráfica publicitaria en Chile. Tienda pública con catálogo, cotizaciones sin registro, panel admin con login."
+
+backend:
+  - task: "GET /api/services - Obtener servicios públicos"
+    implemented: true
+    working: "NA"
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "API implementada con datos por defecto si no hay en DB"
+
+  - task: "GET /api/portfolio - Obtener portfolio público"
+    implemented: true
+    working: "NA"
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "API implementada con datos por defecto"
+
+  - task: "POST /api/quotes - Crear cotización (público)"
+    implemented: true
+    working: "NA"
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Permite crear cotizaciones sin autenticación"
+
+  - task: "POST /api/auth/login - Login administrador"
+    implemented: true
+    working: "NA"
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "JWT auth con bcrypt, crea admin por defecto"
+
+  - task: "GET /api/admin/dashboard - Dashboard stats (auth)"
+    implemented: true
+    working: "NA"
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Requiere token JWT en header Authorization"
+
+  - task: "GET/PUT /api/admin/quotes - Gestión cotizaciones (auth)"
+    implemented: true
+    working: "NA"
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "CRUD completo para cotizaciones admin"
+
+  - task: "CRUD /api/admin/services - Gestión servicios (auth)"
+    implemented: true
+    working: "NA"
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET/POST/PUT/DELETE para servicios"
+
+  - task: "CRUD /api/admin/portfolio - Gestión portfolio (auth)"
+    implemented: true
+    working: "NA"
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "low"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET/POST/DELETE para portfolio"
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "GET /api/services - Obtener servicios públicos"
+    - "POST /api/quotes - Crear cotización (público)"
+    - "POST /api/auth/login - Login administrador"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: "MVP implementado para PrintStudios.cl. Backend con endpoints públicos (services, portfolio, quotes) y admin con JWT auth. Por favor testear primero las APIs públicas y luego el flujo de auth admin. Credenciales admin por defecto: admin@printstudios.cl / admin123"
