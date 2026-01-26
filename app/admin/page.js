@@ -1306,7 +1306,8 @@ export default function AdminPage() {
     quotes: [],
     services: [],
     portfolio: [],
-    messages: []
+    messages: [],
+    botRequests: []
   })
 
   useEffect(() => {
