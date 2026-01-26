@@ -197,15 +197,18 @@ backend:
 
   - task: "CRUD /api/admin/services - Gestión servicios (auth)"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/app/api/[[...path]]/route.js"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "GET/POST/PUT/DELETE para servicios"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: All CRUD operations successful - GET returns services, POST creates new service, PUT updates service, DELETE removes service. All require JWT auth and work correctly."
 
   - task: "CRUD /api/admin/portfolio - Gestión portfolio (auth)"
     implemented: true
