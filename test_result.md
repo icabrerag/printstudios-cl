@@ -137,15 +137,18 @@ backend:
 
   - task: "POST /api/quotes - Crear cotización (público)"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/app/api/[[...path]]/route.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Permite crear cotizaciones sin autenticación"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Quote creation successful with realistic Chilean data. Validates required fields (name, email, serviceId). Returns success response with quoteId. Email notification MOCKED."
 
   - task: "POST /api/auth/login - Login administrador"
     implemented: true
