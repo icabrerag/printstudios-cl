@@ -1340,6 +1340,14 @@ export default function AdminPage() {
           const dashData = await res.json()
           setData(prev => ({ ...prev, stats: dashData.stats, recentQuotes: dashData.recentQuotes }))
         }
+      } else if (activeTab === 'bot-requests') {
+        const res = await fetch('/api/admin/bot-requests', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        if (res.ok) {
+          const botRequests = await res.json()
+          setData(prev => ({ ...prev, botRequests }))
+        }
       } else if (activeTab === 'quotes') {
         const res = await fetch('/api/admin/quotes', {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -1377,6 +1385,31 @@ export default function AdminPage() {
       console.error('Error fetching data:', error)
     }
   }
+
+  // Fetch bot request count for sidebar badge
+  const fetchBotRequestCount = async () => {
+    const token = localStorage.getItem('token')
+    if (!token) return 0
+    
+    try {
+      const res = await fetch('/api/admin/bot-requests', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (res.ok) {
+        const requests = await res.json()
+        const newCount = requests.filter(r => r.status === 'NEW').length
+        setData(prev => ({ ...prev, botRequests: requests, newBotRequestCount: newCount }))
+      }
+    } catch (error) {
+      console.error('Error fetching bot request count:', error)
+    }
+  }
+
+  useEffect(() => {
+    if (user) {
+      fetchBotRequestCount()
+    }
+  }, [user])
 
   const handleUpdateQuoteStatus = async (quoteId, updates) => {
     const token = localStorage.getItem('token')
