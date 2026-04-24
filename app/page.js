@@ -563,7 +563,7 @@ const ContactSection = () => (
               </div>
               <div>
                 <p className="text-gray-400 text-sm">Ubicación</p>
-                <p className="font-medium">Santiago, Chile</p>
+                <p className="font-medium">Concón, Chile</p>
               </div>
             </div>
           </div>
@@ -600,7 +600,7 @@ const Footer = () => (
           <span className="text-white font-bold">PrintStudios.cl</span>
         </div>
         <p className="text-sm">
-          © 2025 PrintStudios.cl - Todos los derechos reservados
+          © 2026 PrintStudios.cl - Todos los derechos reservados
         </p>
       </div>
     </div>
