@@ -11,7 +11,7 @@ import {
   processUserResponse, 
   validateRequirements,
   recommendMaterial 
-} from '@/frontend/lib/chatbot/flowEngine'
+} from '@/lib/chatbot/flowEngine'
 
 // MongoDB connection
 let client
