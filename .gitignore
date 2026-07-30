@@ -1,21 +1,59 @@
-# Env
+# Environment files
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
 
-# Frontend
+# Dependencies
+node_modules/
 frontend/node_modules/
+
+# Next.js builds
+.next/
 frontend/.next/
+out/
 frontend/out/
 
-# Backend
+# Python
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
 backend/venv/
 backend/.venv/
-backend/__pycache__/
-backend/**/*.pyc
 
-# General
-node_modules/
-.next/
-__pycache__/
-*.pyc
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Temporary/generated artifacts
+tmp/
+output/
+.cache/
+.tmp/
+*.tmp
+*.temp
+
+# Local credentials and private keys
+credentials/
+secrets/
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+
+# Raw media/drop folder outside the deployable frontend bundle
+/public/

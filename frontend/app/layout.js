@@ -2,8 +2,8 @@ import './globals.css'
 import { Toaster } from '@/components/ui/sonner'
 
 export const metadata = {
-  title: 'PrintStudios.cl - Impresión 3D y Gráfica Publicitaria',
-  description: 'Servicios profesionales de impresión 3D y gráfica publicitaria en Chile. Rollups, banners, volantes y más.',
+  title: 'PrintStudios.cl - Impresion 3D y grafica publicitaria',
+  description: 'Servicios profesionales de impresion 3D, prototipado y grafica publicitaria en Chile.',
 }
 
 export default function RootLayout({ children }) {

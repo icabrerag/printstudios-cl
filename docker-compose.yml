@@ -1,0 +1,51 @@
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "3005:3005"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8005
+      - INTERNAL_API_URL=http://backend:8000
+      - CORS_ORIGINS=http://localhost:3005
+
+  backend:
+    build: ./backend
+    ports:
+      - "8005:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=mysql+pymysql://root:pstudiosdb@db:3306/printstudios
+      - CORS_ORIGINS=http://localhost:3005
+      - NEXT_PUBLIC_BASE_URL=http://localhost:3005
+      - EMAIL_SEND_ENABLED=${EMAIL_SEND_ENABLED:-false}
+      - EMAIL_PROVIDER=${EMAIL_PROVIDER:-mock}
+      - EMAIL_FROM=${EMAIL_FROM:-}
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USERNAME=${SMTP_USERNAME:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - SMTP_USE_TLS=${SMTP_USE_TLS:-true}
+      - SMTP_USE_SSL=${SMTP_USE_SSL:-false}
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+
+  db:
+    image: mysql:8
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: pstudiosdb
+      MYSQL_DATABASE: printstudios
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:

@@ -15,7 +15,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { toast } from 'sonner'
 import {
-  Box,
   LayoutDashboard,
   FileText,
   Package,
@@ -34,6 +33,9 @@ import {
   TrendingUp,
   Users,
   Bot,
+  BookOpen,
+  Award,
+  Mail as MailIcon,
   Send,
   AlertTriangle,
   ArrowRight,
@@ -75,11 +77,11 @@ const LoginForm = ({ onLogin }) => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-[#f7f3ed]">
+      <Card className="w-full max-w-md border-[#d8c2a3]">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <Box className="h-12 w-12 text-primary" />
+            <img src="/assets/brand/printstudios-logo-full.png" alt="PrintStudios" className="h-24 w-auto object-contain" />
           </div>
           <CardTitle>PrintStudios Admin</CardTitle>
           <CardDescription>Ingresa tus credenciales para continuar</CardDescription>
@@ -93,7 +95,7 @@ const LoginForm = ({ onLogin }) => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@printstudios.cl"
+                placeholder="admin@tudominio.cl"
                 required
               />
             </div>
@@ -113,7 +115,7 @@ const LoginForm = ({ onLogin }) => {
             </Button>
           </form>
           <p className="text-xs text-gray-500 mt-4 text-center">
-            Credenciales por defecto: admin@printstudios.cl / admin123
+            Usa las credenciales configuradas por variables de entorno del backend.
           </p>
         </CardContent>
       </Card>
@@ -127,16 +129,16 @@ const Sidebar = ({ activeTab, setActiveTab, onLogout, botRequestCount }) => {
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'bot-requests', label: 'Solicitudes Bot', icon: Bot, badge: botRequestCount },
     { id: 'quotes', label: 'Cotizaciones', icon: FileText },
+    { id: 'courses', label: 'Cursos', icon: BookOpen },
     { id: 'services', label: 'Servicios', icon: Package },
     { id: 'portfolio', label: 'Portfolio', icon: ImageIcon },
     { id: 'messages', label: 'Mensajes', icon: MessageCircle },
   ]
 
   return (
-    <div className="w-64 bg-gray-900 text-white min-h-screen p-4 flex flex-col">
+    <div className="w-64 bg-[#1f2a30] text-white min-h-screen p-4 flex flex-col">
       <div className="flex items-center gap-2 mb-8">
-        <Box className="h-8 w-8 text-primary" />
-        <span className="font-bold text-lg">PrintStudios</span>
+        <img src="/assets/brand/printstudios-wordmark-light-crop.png" alt="PrintStudios" className="h-11 w-auto" />
       </div>
 
       <nav className="flex-1 space-y-2">
@@ -146,8 +148,8 @@ const Sidebar = ({ activeTab, setActiveTab, onLogout, botRequestCount }) => {
             onClick={() => setActiveTab(item.id)}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition ${
               activeTab === item.id
-                ? 'bg-primary text-white'
-                : 'text-gray-300 hover:bg-gray-800'
+                ? 'bg-[#c5a06d] text-[#1f2a30]'
+                : 'text-gray-300 hover:bg-white/10'
             }`}
           >
             <item.icon className="h-5 w-5" />
@@ -1295,6 +1297,252 @@ const MessagesManagement = ({ messages, onRefresh, token }) => {
   )
 }
 
+const CoursesManagement = ({ courses, emails, certificates, onRefresh, token }) => {
+  const [isCourseOpen, setIsCourseOpen] = useState(false)
+  const [selectedCourse, setSelectedCourse] = useState(null)
+  const [courseDetail, setCourseDetail] = useState(null)
+  const [courseForm, setCourseForm] = useState({
+    title: '',
+    description: '',
+    intro: '',
+    level: 'principiante',
+    price: '0',
+    image: '',
+    duration: '1 hora',
+    tags: '',
+    isPublished: true
+  })
+  const [moduleForm, setModuleForm] = useState({ title: '', description: '', sortOrder: 1 })
+  const [lessonForm, setLessonForm] = useState({ moduleId: '', title: '', description: '', content: '', videoUrl: '', duration: '10 min', sortOrder: 1, isFreePreview: false })
+
+  const resetCourseForm = () => {
+    setSelectedCourse(null)
+    setCourseDetail(null)
+    setCourseForm({ title: '', description: '', intro: '', level: 'principiante', price: '0', image: '', duration: '1 hora', tags: '', isPublished: true })
+  }
+
+  const openCourse = async (course = null) => {
+    resetCourseForm()
+    if (course) {
+      setSelectedCourse(course)
+      setCourseForm({
+        title: course.title || '',
+        description: course.description || '',
+        intro: course.intro || '',
+        level: course.level || 'principiante',
+        price: String(course.price || 0),
+        image: course.image || '',
+        duration: course.duration || '',
+        tags: (course.tags || []).join(', '),
+        isPublished: true
+      })
+      const response = await fetch(`/api/admin/courses/${course.id}`, { headers: { Authorization: `Bearer ${token}` } })
+      if (response.ok) setCourseDetail(await response.json())
+    }
+    setIsCourseOpen(true)
+  }
+
+  const saveCourse = async (e) => {
+    e.preventDefault()
+    const payload = {
+      ...courseForm,
+      price: parseInt(courseForm.price) || 0,
+      tags: courseForm.tags.split(',').map(t => t.trim()).filter(Boolean)
+    }
+    const url = selectedCourse ? `/api/admin/courses/${selectedCourse.id}` : '/api/admin/courses'
+    const response = await fetch(url, {
+      method: selectedCourse ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(payload)
+    })
+    if (response.ok) {
+      toast.success(selectedCourse ? 'Curso actualizado' : 'Curso creado')
+      onRefresh()
+      if (!selectedCourse) {
+        setIsCourseOpen(false)
+      }
+    } else {
+      toast.error('No se pudo guardar el curso')
+    }
+  }
+
+  const addModule = async () => {
+    if (!selectedCourse || !moduleForm.title) return
+    const response = await fetch(`/api/admin/courses/${selectedCourse.id}/modules`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(moduleForm)
+    })
+    if (response.ok) {
+      toast.success('Modulo agregado')
+      openCourse(selectedCourse)
+      setModuleForm({ title: '', description: '', sortOrder: 1 })
+    }
+  }
+
+  const addLesson = async () => {
+    if (!selectedCourse || !lessonForm.moduleId || !lessonForm.title || !lessonForm.content) return
+    const response = await fetch(`/api/admin/courses/${selectedCourse.id}/modules/${lessonForm.moduleId}/lessons`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(lessonForm)
+    })
+    if (response.ok) {
+      toast.success('Leccion agregada')
+      openCourse(selectedCourse)
+      setLessonForm({ moduleId: '', title: '', description: '', content: '', videoUrl: '', duration: '10 min', sortOrder: 1, isFreePreview: false })
+      onRefresh()
+    }
+  }
+
+  const deleteCourse = async (courseId) => {
+    if (!confirm('Eliminar curso y su contenido?')) return
+    const response = await fetch(`/api/admin/courses/${courseId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } })
+    if (response.ok) {
+      toast.success('Curso eliminado')
+      onRefresh()
+    }
+  }
+
+  const sendEmail = async (emailId) => {
+    const response = await fetch(`/api/admin/email-notifications/${emailId}/send`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    if (response.ok) {
+      const result = await response.json()
+      toast[result.success ? 'success' : 'error'](result.success ? 'Email enviado' : 'Email no enviado. Revisa la configuracion del proveedor.')
+      onRefresh()
+    } else {
+      toast.error('No se pudo reintentar el email')
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Cursos Online</h1>
+        <Button onClick={() => openCourse()}>
+          <Plus className="h-4 w-4 mr-2" /> Nuevo Curso
+        </Button>
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-4">
+        <Card><CardContent className="pt-6"><BookOpen className="h-6 w-6 text-primary mb-2" /><p className="text-sm text-gray-500">Cursos</p><p className="text-2xl font-bold">{courses.length}</p></CardContent></Card>
+        <Card><CardContent className="pt-6"><MailIcon className="h-6 w-6 text-primary mb-2" /><p className="text-sm text-gray-500">Emails</p><p className="text-2xl font-bold">{emails.length}</p></CardContent></Card>
+        <Card><CardContent className="pt-6"><Award className="h-6 w-6 text-primary mb-2" /><p className="text-sm text-gray-500">Certificados</p><p className="text-2xl font-bold">{certificates.length}</p></CardContent></Card>
+      </div>
+
+      <Tabs defaultValue="courses">
+        <TabsList>
+          <TabsTrigger value="courses">Cursos</TabsTrigger>
+          <TabsTrigger value="emails">Emails</TabsTrigger>
+          <TabsTrigger value="certificates">Certificados</TabsTrigger>
+        </TabsList>
+        <TabsContent value="courses" className="mt-4">
+          <Card>
+            <CardContent className="pt-6">
+              <Table>
+                <TableHeader><TableRow><TableHead>Curso</TableHead><TableHead>Nivel</TableHead><TableHead>Precio</TableHead><TableHead>Lecciones</TableHead><TableHead>Acciones</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {courses.map(course => (
+                    <TableRow key={course.id}>
+                      <TableCell><p className="font-medium">{course.title}</p><p className="text-xs text-gray-500">{course.id}</p></TableCell>
+                      <TableCell>{course.level}</TableCell>
+                      <TableCell>${(course.price || 0).toLocaleString('es-CL')}</TableCell>
+                      <TableCell>{course.lessonCount}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline" onClick={() => openCourse(course)}><Edit className="h-4 w-4" /></Button>
+                          <Button size="sm" variant="destructive" onClick={() => deleteCourse(course.id)}><Trash2 className="h-4 w-4" /></Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="emails" className="mt-4">
+          <Card><CardContent className="pt-6 space-y-3">{emails.map(email => (
+            <div key={email.id} className="rounded-lg border p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-medium">{email.subject}</p>
+                  <p className="text-sm text-gray-500">{email.recipient} - {email.eventType} - {email.status}</p>
+                  <p className="text-xs text-gray-400">{email.provider}</p>
+                </div>
+                {email.status !== 'sent' && (
+                  <Button size="sm" variant="outline" onClick={() => sendEmail(email.id)}>
+                    Reintentar
+                  </Button>
+                )}
+              </div>
+            </div>
+          ))}</CardContent></Card>
+        </TabsContent>
+        <TabsContent value="certificates" className="mt-4">
+          <Card><CardContent className="pt-6 space-y-3">{certificates.map(cert => <div key={cert.id} className="rounded-lg border p-3"><p className="font-medium">{cert.studentName} - {cert.courseTitle}</p><p className="text-sm text-gray-500">{cert.certificateCode}</p></div>)}</CardContent></Card>
+        </TabsContent>
+      </Tabs>
+
+      <Dialog open={isCourseOpen} onOpenChange={(open) => { setIsCourseOpen(open); if (!open) resetCourseForm() }}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{selectedCourse ? 'Editar curso' : 'Nuevo curso'}</DialogTitle></DialogHeader>
+          <form onSubmit={saveCourse} className="space-y-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2"><Label>Titulo</Label><Input value={courseForm.title} onChange={(e) => setCourseForm({ ...courseForm, title: e.target.value })} required /></div>
+              <div className="space-y-2"><Label>Nivel</Label><Input value={courseForm.level} onChange={(e) => setCourseForm({ ...courseForm, level: e.target.value })} /></div>
+              <div className="space-y-2"><Label>Precio CLP</Label><Input type="number" value={courseForm.price} onChange={(e) => setCourseForm({ ...courseForm, price: e.target.value })} /></div>
+              <div className="space-y-2"><Label>Duracion</Label><Input value={courseForm.duration} onChange={(e) => setCourseForm({ ...courseForm, duration: e.target.value })} /></div>
+            </div>
+            <div className="space-y-2"><Label>Descripcion</Label><Textarea value={courseForm.description} onChange={(e) => setCourseForm({ ...courseForm, description: e.target.value })} required /></div>
+            <div className="space-y-2"><Label>Introduccion</Label><Textarea value={courseForm.intro} onChange={(e) => setCourseForm({ ...courseForm, intro: e.target.value })} required /></div>
+            <div className="space-y-2"><Label>Imagen/banner</Label><Input value={courseForm.image} onChange={(e) => setCourseForm({ ...courseForm, image: e.target.value })} /></div>
+            <div className="space-y-2"><Label>Tags separados por coma</Label><Input value={courseForm.tags} onChange={(e) => setCourseForm({ ...courseForm, tags: e.target.value })} /></div>
+            <Button type="submit">Guardar curso</Button>
+          </form>
+
+          {selectedCourse && (
+            <div className="mt-6 grid gap-6 md:grid-cols-2">
+              <Card>
+                <CardHeader><CardTitle className="text-lg">Agregar modulo</CardTitle></CardHeader>
+                <CardContent className="space-y-3">
+                  <Input placeholder="Titulo" value={moduleForm.title} onChange={(e) => setModuleForm({ ...moduleForm, title: e.target.value })} />
+                  <Textarea placeholder="Descripcion" value={moduleForm.description} onChange={(e) => setModuleForm({ ...moduleForm, description: e.target.value })} />
+                  <Button type="button" onClick={addModule}>Agregar modulo</Button>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader><CardTitle className="text-lg">Agregar leccion</CardTitle></CardHeader>
+                <CardContent className="space-y-3">
+                  <Select value={lessonForm.moduleId} onValueChange={(value) => setLessonForm({ ...lessonForm, moduleId: value })}>
+                    <SelectTrigger><SelectValue placeholder="Modulo" /></SelectTrigger>
+                    <SelectContent>{courseDetail?.modules?.map(module => <SelectItem key={module.id} value={module.id}>{module.title}</SelectItem>)}</SelectContent>
+                  </Select>
+                  <Input placeholder="Titulo" value={lessonForm.title} onChange={(e) => setLessonForm({ ...lessonForm, title: e.target.value })} />
+                  <Textarea placeholder="Contenido" value={lessonForm.content} onChange={(e) => setLessonForm({ ...lessonForm, content: e.target.value })} />
+                  <Input placeholder="URL video opcional" value={lessonForm.videoUrl} onChange={(e) => setLessonForm({ ...lessonForm, videoUrl: e.target.value })} />
+                  <label className="flex items-center gap-2 text-sm text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={lessonForm.isFreePreview}
+                      onChange={(e) => setLessonForm({ ...lessonForm, isFreePreview: e.target.checked })}
+                    />
+                    Leccion gratuita de vista previa
+                  </label>
+                  <Button type="button" onClick={addLesson}>Agregar leccion</Button>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
+
 // Main Admin Component
 export default function AdminPage() {
   const [user, setUser] = useState(null)
@@ -1304,6 +1552,9 @@ export default function AdminPage() {
     stats: null,
     recentQuotes: [],
     quotes: [],
+    courses: [],
+    emailNotifications: [],
+    certificates: [],
     services: [],
     portfolio: [],
     messages: [],
@@ -1356,6 +1607,16 @@ export default function AdminPage() {
           const quotes = await res.json()
           setData(prev => ({ ...prev, quotes }))
         }
+      } else if (activeTab === 'courses') {
+        const [coursesRes, emailsRes, certificatesRes] = await Promise.all([
+          fetch('/api/admin/courses', { headers: { 'Authorization': `Bearer ${token}` } }),
+          fetch('/api/admin/email-notifications', { headers: { 'Authorization': `Bearer ${token}` } }),
+          fetch('/api/admin/certificates', { headers: { 'Authorization': `Bearer ${token}` } })
+        ])
+        const courses = coursesRes.ok ? await coursesRes.json() : []
+        const emailNotifications = emailsRes.ok ? await emailsRes.json() : []
+        const certificates = certificatesRes.ok ? await certificatesRes.json() : []
+        setData(prev => ({ ...prev, courses, emailNotifications, certificates }))
       } else if (activeTab === 'services') {
         const res = await fetch('/api/admin/services', {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -1475,6 +1736,15 @@ export default function AdminPage() {
             quotes={data.quotes}
             onUpdateStatus={handleUpdateQuoteStatus}
             onRefresh={fetchData}
+          />
+        )}
+        {activeTab === 'courses' && (
+          <CoursesManagement
+            courses={data.courses}
+            emails={data.emailNotifications}
+            certificates={data.certificates}
+            onRefresh={fetchData}
+            token={localStorage.getItem('token')}
           />
         )}
         {activeTab === 'services' && (
