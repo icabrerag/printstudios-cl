@@ -19,7 +19,7 @@ if not DATABASE_URL:
 def mysql_connect_args() -> dict:
     if os.getenv("MYSQL_SSL_ENABLED", "false").lower() not in {"1", "true", "yes", "on"}:
         return {}
-    ssl_config = {}
+    ssl_config = {"check_hostname": False}
     ssl_ca = os.getenv("MYSQL_SSL_CA")
     if ssl_ca:
         ssl_config["ca"] = ssl_ca
